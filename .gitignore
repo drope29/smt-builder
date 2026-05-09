@@ -1,0 +1,108 @@
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# VS Code / IDEs
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+.env
+.env.*
+!.env.example
+
+venv/
+.venv/
+env/
+ENV/
+
+pip-log.txt
+pip-delete-this-directory.txt
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Backend - arquivos locais
+# =========================
+backend/__pycache__/
+backend/.cache/
+backend/data/
+backend/*.log
+backend/logs/
+
+# Histórico local gerado pelo sistema
+backend/data/parlay_history.json
+
+# Cache de estatísticas/API
+backend/.cache/team_stats_cache.json
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+frontend/node_modules/
+
+dist/
+frontend/dist/
+
+build/
+frontend/build/
+
+.vite/
+frontend/.vite/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Variáveis de ambiente
+# =========================
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Arquivos temporários
+# =========================
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# =========================
+# Banco/cache local futuro
+# =========================
+*.sqlite
+*.sqlite3
+*.db
