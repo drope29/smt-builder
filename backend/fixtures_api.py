@@ -193,13 +193,22 @@ def pick_best_fixture(
     return best_item, best_score
 
 
+LEAGUE_DATE_FIXTURES_CACHE: dict[str, list[dict]] = {}
+
+
 def fetch_fixtures_by_league_date(
     sport_key: str,
     date_value: str,
 ) -> list[dict]:
+    cache_key = f"{sport_key}:{date_value}"
+
+    if cache_key in LEAGUE_DATE_FIXTURES_CACHE:
+        return LEAGUE_DATE_FIXTURES_CACHE[cache_key]
+
     league_config = SOCCER_LEAGUE_MAP.get(sport_key)
 
     if not league_config:
+        LEAGUE_DATE_FIXTURES_CACHE[cache_key] = []
         return []
 
     data = request_api_football(
@@ -211,10 +220,15 @@ def fetch_fixtures_by_league_date(
         },
     )
 
-    if not data:
-        return []
+    items = (data.get("response", []) or []) if data else []
 
-    return data.get("response", []) or []
+    # Só guarda no cache se a chamada realmente foi feita (ou seja, não
+    # ficou de fora por falta de orçamento diário) — assim uma falta de
+    # cota momentânea não fica "presa" em cache como resultado vazio.
+    if data is not None:
+        LEAGUE_DATE_FIXTURES_CACHE[cache_key] = items
+
+    return items
 
 
 def fetch_fixtures_by_date_only(date_value: str) -> list[dict]:
@@ -409,9 +423,15 @@ def enrich_leg_with_fixture(
 
 def enrich_legs_with_fixtures(
     legs: list[dict],
-    sport_key: str,
+    sport_key: str | None = None,
     max_games: int = 8,
 ) -> list[dict]:
+    """
+    sport_key aqui é usado apenas como fallback para pernas antigas que não
+    tragam o próprio sport_key. Sempre que possível, usa-se leg["sport_key"],
+    já que ao buscar múltiplas ligas ao mesmo tempo ("todos") cada perna pode
+    pertencer a uma liga diferente.
+    """
     game_keys = []
     game_fixture_map = {}
 
@@ -438,8 +458,10 @@ def enrich_legs_with_fixtures(
         if game_key in game_fixture_map:
             continue
 
+        leg_sport_key = leg.get("sport_key") or sport_key
+
         fixture = find_fixture_for_game(
-            sport_key=sport_key,
+            sport_key=leg_sport_key,
             home_team=leg.get("home_team"),
             away_team=leg.get("away_team"),
             commence_time=leg.get("commence_time"),

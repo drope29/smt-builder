@@ -9,6 +9,9 @@ import {
 import "./styles.css";
 
 const SPORT_OPTIONS = [
+    { label: "Todas as ligas", value: "all" },
+    { label: "Brasileirão Série A", value: "soccer_brazil_campeonato" },
+    { label: "MLS", value: "soccer_usa_mls" },
     { label: "Premier League", value: "soccer_epl" },
     { label: "La Liga", value: "soccer_spain_la_liga" },
     { label: "Serie A", value: "soccer_italy_serie_a" },
@@ -23,6 +26,7 @@ const PROFILE_OPTIONS = [
 ];
 
 const REGION_OPTIONS = [
+    { label: "Todas as regiões", value: "all" },
     { label: "Europa", value: "eu" },
     { label: "Reino Unido", value: "uk" },
     { label: "Estados Unidos", value: "us" },
@@ -228,7 +232,7 @@ function App() {
             });
 
             if (!result?.success) {
-                setResponse(result);
+                setResponse(null);
                 setError(result?.message || "Não foi possível montar os bilhetes.");
                 return;
             }

@@ -26,3 +26,16 @@ ALLOWED_MARKETS = [
     "player_goals",
     "player_assists",
 ]
+
+
+ALL_SOCCER_LEAGUES = [
+    "soccer_epl",
+    "soccer_spain_la_liga",
+    "soccer_italy_serie_a",
+    "soccer_germany_bundesliga",
+    "soccer_france_ligue_one",
+    "soccer_brazil_campeonato",
+    "soccer_usa_mls",
+]
+
+ALL_REGIONS = "eu,uk,us,au"

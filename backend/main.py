@@ -14,6 +14,7 @@ from storage import (
     get_history_item,
     update_history_item,
 )
+from config import ALL_SOCCER_LEAGUES, ALL_REGIONS
 
 
 app = FastAPI(title="SmartBet Builder API")
@@ -43,6 +44,53 @@ class UpdateHistoryResultPayload(BaseModel):
     status: str
     result: Optional[str] = None
     notes: Optional[str] = None
+
+
+def resolve_regions(regions: str) -> str:
+    if regions == "all":
+        return ALL_REGIONS
+
+    return regions
+
+
+def fetch_games(
+    sport_key: str,
+    regions: str,
+    bookmakers: Optional[str],
+) -> list[dict]:
+    """
+    Busca jogos/odds. Se sport_key for "all", busca em todas as ligas
+    suportadas e junta os resultados numa lista só. Se alguma liga falhar
+    (ex: sem jogos hoje/amanhã, ou erro pontual da API), ignora só aquela
+    liga em vez de derrubar a busca inteira.
+    """
+    resolved_regions = resolve_regions(regions)
+
+    if sport_key != "all":
+        return odds_client.get_odds(
+            sport_key=sport_key,
+            regions=resolved_regions,
+            bookmakers=bookmakers,
+            only_today_tomorrow=True,
+        )
+
+    all_games = []
+
+    for league_key in ALL_SOCCER_LEAGUES:
+        try:
+            league_games = odds_client.get_odds(
+                sport_key=league_key,
+                regions=resolved_regions,
+                bookmakers=bookmakers,
+                only_today_tomorrow=True,
+            )
+            all_games.extend(league_games)
+        except Exception:
+            # Não deixa uma liga com problema (sem jogos, erro da API, etc.)
+            # derrubar a busca das outras ligas.
+            continue
+
+    return all_games
 
 
 def extract_bookmakers(api_games: list[dict]) -> list[str]:
@@ -185,11 +233,10 @@ def debug_odds(
     bookmakers: Optional[str] = Query(default=None),
 ):
     try:
-        api_games = odds_client.get_odds(
+        api_games = fetch_games(
             sport_key=sport_key,
             regions=regions,
             bookmakers=bookmakers,
-            only_today_tomorrow=True,
         )
 
         legs = normalize_outcomes(
@@ -275,11 +322,10 @@ def create_parlay(
     bookmakers: Optional[str] = Query(default=None),
 ):
     try:
-        api_games = odds_client.get_odds(
+        api_games = fetch_games(
             sport_key=sport_key,
             regions=regions,
             bookmakers=bookmakers,
-            only_today_tomorrow=True,
         )
 
         legs = normalize_outcomes(
@@ -339,11 +385,10 @@ def create_parlay(
 @app.post("/parlay/rebuild")
 def rebuild_parlay(payload: RebuildParlayPayload):
     try:
-        api_games = odds_client.get_odds(
+        api_games = fetch_games(
             sport_key=payload.sport_key,
             regions=payload.regions,
             bookmakers=payload.bookmakers,
-            only_today_tomorrow=True,
         )
 
         legs = normalize_outcomes(

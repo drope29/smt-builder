@@ -21,6 +21,24 @@ MISS_CACHE_TTL_SECONDS = 6 * 60 * 60
 
 API_FOOTBALL_CALLS_MADE = 0
 API_FOOTBALL_MAX_CALLS_PER_RUN = int(os.getenv("API_FOOTBALL_MAX_CALLS_PER_RUN", "40"))
+API_FOOTBALL_CALLS_RESET_DATE: str | None = None
+
+
+def reset_api_football_call_budget_if_new_day() -> None:
+    """
+    O contador de chamadas é pensado como um orçamento por dia (a cota real
+    da API-Football é diária). Antes, ele só zerava quando o servidor era
+    reiniciado manualmente, então depois de bater o limite uma vez, TODAS as
+    buscas seguintes (fixtures e estatísticas) ficavam mudas silenciosamente
+    até o próximo restart. Agora ele reseta sozinho a cada novo dia.
+    """
+    global API_FOOTBALL_CALLS_MADE, API_FOOTBALL_CALLS_RESET_DATE
+
+    today = datetime.now().date().isoformat()
+
+    if API_FOOTBALL_CALLS_RESET_DATE != today:
+        API_FOOTBALL_CALLS_RESET_DATE = today
+        API_FOOTBALL_CALLS_MADE = 0
 
 
 SOCCER_LEAGUE_MAP = {
@@ -48,6 +66,16 @@ SOCCER_LEAGUE_MAP = {
         "league_id": 61,
         "country": "France",
         "name": "Ligue 1",
+    },
+    "soccer_brazil_campeonato": {
+        "league_id": 71,
+        "country": "Brazil",
+        "name": "Brasileirão Série A",
+    },
+    "soccer_usa_mls": {
+        "league_id": 253,
+        "country": "USA",
+        "name": "MLS",
     },
 }
 
@@ -171,6 +199,8 @@ def request_api_football(endpoint: str, params: dict) -> dict | None:
 
     if not API_FOOTBALL_KEY:
         return None
+
+    reset_api_football_call_budget_if_new_day()
 
     if API_FOOTBALL_CALLS_MADE >= API_FOOTBALL_MAX_CALLS_PER_RUN:
         return None
